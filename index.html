@@ -156,14 +156,13 @@
   <div class="brand">
     <div class="bolt" aria-hidden="true">⚡</div>
     <b>Verificação de acesso</b>
-    <span>2 perguntas</span>
+    <span>1 pergunta</span>
   </div>
 
   <div class="track" id="track">
-    <div class="track-label" id="trackLabel">Pergunta 1 de 2</div>
+    <div class="track-label">Confirme sua idade</div>
     <div class="track-bar">
-      <span class="on" id="seg1"></span>
-      <span id="seg2"></span>
+      <span class="on"></span>
     </div>
   </div>
 
@@ -173,17 +172,8 @@
       <h1>Você tem mais de 18 anos?</h1>
       <p class="sub">Precisamos confirmar sua idade antes de liberar o conteúdo.</p>
       <div class="answers">
-        <button class="answer" type="button" data-q="1" data-v="sim">Sim, sou maior de 18</button>
-        <button class="answer" type="button" data-q="1" data-v="nao">Não</button>
-      </div>
-    </section>
-
-    <section class="screen" id="q2">
-      <h1>Você gosta de diversão online?</h1>
-      <p class="sub">Assim conseguimos mostrar o conteúdo certo para o seu perfil.</p>
-      <div class="answers">
-        <button class="answer" type="button" data-q="2" data-v="sim">Sim, gosto</button>
-        <button class="answer" type="button" data-q="2" data-v="nao">Não muito</button>
+        <button class="answer" type="button" id="btn-maior18" data-v="sim">Sim, sou maior de 18</button>
+        <button class="answer" type="button" id="btn-menor18" data-v="nao">Não</button>
       </div>
     </section>
 
@@ -208,32 +198,20 @@
    CONFIGURAÇÃO — altere só este bloco
    ========================================================= */
 var CONFIG = {
-  // Link de saída (oferta, Keitaro, etc.)
-  linkOferta: "https://lancecerto.net/r/x6pddle9",
+  // Link aberto quando a pessoa confirma que é maior de 18
+  linkOferta: "https://fliperamaofertas.store/PjPNsfQ9",
 
   // Repassa as query strings da URL atual para o link de saída
   // (utm_source, utm_campaign, sub_id, click_id, fbclid...)
-  repassarParametros: true,
-
-  // Tempo (ms) na pergunta 2 antes de redirecionar sozinho
-  tempoRedirecionamento: 2000
+  repassarParametros: true
 };
 /* ========================================================= */
 
-var telas = {
-  q1: document.getElementById("q1"),
-  q2: document.getElementById("q2"),
-  blocked: document.getElementById("blocked")
-};
-var track = document.getElementById("track");
-var trackLabel = document.getElementById("trackLabel");
-var seg2 = document.getElementById("seg2");
 var redirecionando = false;
-var timerRedirecionamento = null;
 
-function mostrar(nome) {
-  Object.keys(telas).forEach(function (k) { telas[k].classList.remove("is-active"); });
-  telas[nome].classList.add("is-active");
+function mostrar(id) {
+  document.querySelectorAll(".screen").forEach(function (s) { s.classList.remove("is-active"); });
+  document.getElementById(id).classList.add("is-active");
   window.scrollTo(0, 0);
 }
 
@@ -251,42 +229,28 @@ function montarLink() {
   }
 }
 
-function redirecionar() {
-  if (redirecionando) return;
-  redirecionando = true;
-  if (timerRedirecionamento) clearTimeout(timerRedirecionamento);
-  window.location.href = montarLink();
+function marcar(botao) {
+  document.querySelectorAll(".answer").forEach(function (b) { b.classList.remove("is-picked"); });
+  botao.classList.add("is-picked");
 }
 
-document.querySelectorAll(".answer").forEach(function (botao) {
-  botao.addEventListener("click", function () {
-    var pergunta = botao.dataset.q;
-    var valor = botao.dataset.v;
+// Confirmou a idade: vai direto para o link
+document.getElementById("btn-maior18").addEventListener("click", function () {
+  if (redirecionando) return;
+  redirecionando = true;
+  marcar(this);
+  setTimeout(function () {
+    window.location.href = montarLink();
+  }, 260);
+});
 
-    botao.parentElement.querySelectorAll(".answer").forEach(function (b) {
-      b.classList.remove("is-picked");
-    });
-    botao.classList.add("is-picked");
-
-    setTimeout(function () {
-      if (pergunta === "1") {
-        if (valor === "nao") {
-          track.style.visibility = "hidden";
-          mostrar("blocked");
-          return;
-        }
-        trackLabel.textContent = "Pergunta 2 de 2";
-        seg2.classList.add("on");
-        mostrar("q2");
-
-        // Redireciona sozinho após o tempo configurado
-        timerRedirecionamento = setTimeout(redirecionar, CONFIG.tempoRedirecionamento);
-      } else {
-        // Clicou na pergunta 2 antes do tempo: vai direto
-        redirecionar();
-      }
-    }, 260);
-  });
+// Menor de idade: bloqueia
+document.getElementById("btn-menor18").addEventListener("click", function () {
+  marcar(this);
+  setTimeout(function () {
+    document.getElementById("track").style.visibility = "hidden";
+    mostrar("blocked");
+  }, 260);
 });
 </script>
 </body>
